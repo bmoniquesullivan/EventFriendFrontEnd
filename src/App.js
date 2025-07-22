@@ -1,24 +1,30 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+// Import Layout
+import Layout from './components/Layout';
+
+// Import Pages
+import LoginPage from './pages/LoginPage';
+import EventFeedPage from './pages/EventFeedPage';
+import EventDetailPage from './pages/EventDetailPage';
+import DashboardPage from './pages/DashboardPage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+        <Routes>
+            {/* Routes with Navbar and Footer */}
+            <Route path="/events" element={<Layout><EventFeedPage /></Layout>} />
+            <Route path="/events/:id" element={<Layout><EventDetailPage /></Layout>} />
+            <Route path="/dashboard" element={<Layout><DashboardPage /></Layout>} />
+            <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
+
+            {/* Full-screen route (no Navbar/Footer) */}
+            <Route path="/" element={<LoginPage />} />
+        </Routes>
+    </Router>
   );
 }
 
