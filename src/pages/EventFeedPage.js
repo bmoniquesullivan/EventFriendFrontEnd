@@ -1,49 +1,53 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { CalendarIcon, MapPinIcon, HeartIcon } from '@heroicons/react/24/solid';
-import { mockEvents, mockCurrentUser } from '../data/mockData';
-
-const EventCard = ({ event, isInterested, onInterestToggle }) => (
-  <div className="bg-white rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-1 transition-transform duration-300">
-    <Link to={`/events/${event.id}`}>
-      <img src={event.img} alt={event.title} className="w-full h-48 object-cover" />
-    </Link>
-    <div className="p-6">
-      <h2 className="text-xl font-bold text-slate-800 mb-2 truncate">{event.title}</h2>
-      <div className="text-slate-600 text-sm space-y-2 mb-4">
-        <p className="flex items-center"><CalendarIcon className="h-5 w-5 mr-2 text-slate-400"/> {event.date}</p>
-        <p className="flex items-center"><MapPinIcon className="h-5 w-5 mr-2 text-slate-400"/> {event.location}</p>
-      </div>
-      <button 
-        onClick={() => onInterestToggle(event.id)}
-        className={`w-full font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center justify-center space-x-2 ${
-          isInterested 
-          ? 'bg-green-500 text-white hover:bg-green-600' 
-          : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
-        }`}
-      >
-        <HeartIcon className="h-5 w-5" />
-        <span>{isInterested ? "I'm Interested!" : "I'm Interested"}</span>
-      </button>
-    </div>
-  </div>
-);
+import React, { useState, useEffect } from "react";
 
 const EventFeedPage = () => {
-  const [interested, setInterested] = useState(mockCurrentUser.interestedEvents);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true); // For showing loading text
+  const [error, setError] = useState(null);     // For showing any errors
 
-  const toggleInterest = (eventId) => {
-    setInterested(prev => 
-      prev.includes(eventId) ? prev.filter(id => id !== eventId) : [...prev, eventId]
-    );
-  };
-  
+  useEffect(() => {
+    fetch("http://127.0.0.1:5001/eventfriendfirebase/us-central1/api/events")
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to fetch events");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setEvents(data.events); // set array of events
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError("Error loading events.");
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <p className="p-4 text-slate-700">Loading events...</p>;
+  if (error) return <p className="p-4 text-red-600">{error}</p>;
+
   return (
-    <div>
+    <div className="p-6">
       <h1 className="text-3xl font-bold text-slate-800 mb-6">Upcoming Events</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {mockEvents.map(event => (
-          <EventCard key={event.id} event={event} isInterested={interested.includes(event.id)} onInterestToggle={toggleInterest} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {events.map((event) => (
+          <div key={event.id} className="bg-white rounded-xl shadow-md overflow-hidden">
+            <img
+              src={event.image}
+              alt={event.name}
+              className="w-full h-48 object-cover"
+            />
+            <div className="p-4">
+              <h2 className="text-xl font-semibold mb-1">{event.name}</h2>
+              <p className="text-sm text-slate-600">
+                {new Date(event.start).toLocaleString()}
+              </p>
+              <p className="text-sm text-slate-600">
+                {event.venue}, {event.city}
+              </p>
+            </div>
+          </div>
         ))}
       </div>
     </div>
