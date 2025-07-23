@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
-import app, { auth } from '../firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 import { StarIcon } from '@heroicons/react/24/solid';
 import { Link } from 'react-router-dom';
 
@@ -10,18 +11,43 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
-  const auth = getAuth(app);
 
   const handleLogin = async (e) => {
-    e.preventDefault(); // prevent form reload
+  e.preventDefault();
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate('/events'); 
-    } catch (error) {
-      setErrorMsg(error.message); // show user error
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          email: user.email,
+          username: "",
+          city: "",
+          bio: "",
+          interests: []
+        });
+        console.log("User document created.");
+      } else {
+        console.log("User document already exists.");
+      }
+    } catch (firestoreError) {
+      console.error("Error reading or writing user document:", firestoreError);
+      setErrorMsg("Failed to save user data. Please try again later.");
+      return;
     }
-  };
+
+    navigate('/events');
+  } catch (error) {
+    console.error("Login failed:", error);
+    setErrorMsg(error.message);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-slate-200 flex flex-col justify-center items-center">
@@ -32,9 +58,7 @@ const LoginPage = () => {
         </div>
         <p className="text-slate-500 mb-8">Find a friend for any event.</p>
 
-        {errorMsg && (
-          <p className="text-red-600 mb-4">{errorMsg}</p>
-        )}
+        {errorMsg && <p className="text-red-600 mb-4">{errorMsg}</p>}
 
         <form className="space-y-6" onSubmit={handleLogin}>
           <div>
@@ -65,11 +89,12 @@ const LoginPage = () => {
           </button>
         </form>
 
-        
         <p className="mt-6 text-sm text-slate-600">
-        Don't have an account? <Link to="/signup" className="font-semibold text-blue-600 hover:underline">Sign up</Link>
+          Don't have an account?{' '}
+          <Link to="/signup" className="font-semibold text-blue-600 hover:underline">
+            Sign up
+          </Link>
         </p>
-
       </div>
       <p className="mt-8 text-slate-500 text-sm">SWE3313 - Group 2 Project</p>
     </div>
