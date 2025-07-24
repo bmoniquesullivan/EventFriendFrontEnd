@@ -1,21 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getAuth, signOut } from 'firebase/auth';
-import { CalendarIcon, MapPinIcon, HeartIcon, UserCircleIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/solid';
+import { CalendarIcon, MapPinIcon, HeartIcon } from '@heroicons/react/24/solid';
 
 const EventCard = ({ event, isInterested, onInterestToggle }) => (
   <div className="bg-white rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-1 transition-transform duration-300">
     <Link to={`/events/${event.id}`}>
-      <img src={event.image || event.img} alt={event.name || event.title} className="w-full h-48 object-cover" />
+      <img
+        src={event.image || event.img}
+        alt={event.name || event.title}
+        className="w-full h-48 object-cover"
+      />
     </Link>
     <div className="p-6">
-      <h2 className="text-xl font-bold text-slate-800 mb-2 truncate">{event.name || event.title}</h2>
+      <h2 className="text-xl font-bold text-slate-800 mb-2 truncate">
+        {event.name || event.title}
+      </h2>
       <div className="text-slate-600 text-sm space-y-2 mb-4">
         <p className="flex items-center">
-          <CalendarIcon className="h-5 w-5 mr-2 text-slate-400" /> {new Date(event.date).toLocaleDateString()}
+          <CalendarIcon className="h-5 w-5 mr-2 text-slate-400" />
+          {new Date(event.date).toLocaleDateString()}
         </p>
         <p className="flex items-center">
-          <MapPinIcon className="h-5 w-5 mr-2 text-slate-400" /> {event.venue || event.location}, {event.city}
+          <MapPinIcon className="h-5 w-5 mr-2 text-slate-400" />
+          {event.venue || event.location}, {event.city}
         </p>
       </div>
       <button
@@ -33,7 +41,6 @@ const EventCard = ({ event, isInterested, onInterestToggle }) => (
   </div>
 );
 
-
 const EventFeedPage = () => {
   const [events, setEvents] = useState([]);
   const [interested, setInterested] = useState([]);
@@ -46,22 +53,18 @@ const EventFeedPage = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate("/login");
+      navigate('/login');
       return;
     }
 
     const fetchData = async () => {
       try {
-        const eventsRes = await fetch("http://127.0.0.1:5001/eventfriendfirebase/us-central1/api/events");
-        if (!eventsRes.ok) throw new Error("Failed to load events");
+        const eventsRes = await fetch('http://127.0.0.1:5001/eventfriendfirebase/us-central1/api/events');
+        if (!eventsRes.ok) throw new Error('Failed to load events');
         const eventsData = await eventsRes.json();
-
-        const interestedRes = await fetch(`http://127.0.0.1:5001/eventfriendfirebase/us-central1/api/users/${user.uid}/interested`);
-        if (!interestedRes.ok) throw new Error("Failed to load interests");
-        const interestedData = await interestedRes.json();
-
         setEvents(eventsData.events);
-        setInterested(interestedData.interestedEventIds);
+        // Dummy interested list just for toggling visuals
+        setInterested([]);
       } catch (e) {
         setError(e.message);
       } finally {
@@ -72,41 +75,19 @@ const EventFeedPage = () => {
     fetchData();
   }, [user, navigate]);
 
-  const toggleInterest = async (eventId) => {
-    if (!user) {
-      setError("You must be logged in");
-      return;
-    }
-
-    const isCurrentlyInterested = interested.includes(eventId);
-    const shouldBeInterested = !isCurrentlyInterested;
-
-    setInterested(prev =>
-      shouldBeInterested ? [...prev, eventId] : prev.filter(id => id !== eventId)
+  const toggleInterest = (eventId) => {
+    // Just toggle visually – no backend involved
+    setInterested((prev) =>
+      prev.includes(eventId) ? prev.filter((id) => id !== eventId) : [...prev, eventId]
     );
-
-    try {
-      const res = await fetch(`http://127.0.0.1:5001/eventfriendfirebase/us-central1/api/events/${eventId}/interest`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid: user.uid, interested: shouldBeInterested }),
-      });
-      if (!res.ok) throw new Error("Failed to update interest");
-    } catch (e) {
-      setError(e.message);
-      // Rollback on failure
-      setInterested(prev =>
-        shouldBeInterested ? prev.filter(id => id !== eventId) : [...prev, eventId]
-      );
-    }
   };
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      navigate("/login");
+      navigate('/login');
     } catch (err) {
-      setError("Logout failed");
+      setError('Logout failed');
     }
   };
 
@@ -114,21 +95,19 @@ const EventFeedPage = () => {
   if (error) return <p className="p-4 text-red-600">{error}</p>;
 
   return (
-    <>
-      <main className="p-6 max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-slate-800 mb-6">Upcoming Events</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {events.map(event => (
-            <EventCard
-              key={event.id}
-              event={event}
-              isInterested={interested.includes(event.id)}
-              onInterestToggle={toggleInterest}
-            />
-          ))}
-        </div>
-      </main>
-    </>
+    <main className="p-6 max-w-7xl mx-auto">
+      <h1 className="text-3xl font-bold text-slate-800 mb-6">Upcoming Events</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {events.map((event) => (
+          <EventCard
+            key={event.id}
+            event={event}
+            isInterested={interested.includes(event.id)}
+            onInterestToggle={toggleInterest}
+          />
+        ))}
+      </div>
+    </main>
   );
 };
 
