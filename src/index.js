@@ -26,7 +26,6 @@ export class ChatManager {
         this.subscribers = [];
     }
 
-    // Add subscriber callback  - this might not be used
     subscribe(callback) {
         this.subscribers.push(callback);
         return () => {
@@ -34,17 +33,14 @@ export class ChatManager {
         };
     }
 
-    // Notify all subscribers - this might not be used
     notify() {
         this.subscribers.forEach(callback => callback(this.messages));
     }
 
-    // Retrieve all messages
     getMessages() {
         return [...this.messages];
     }
 
-    // Insert new message
     addMessage(text, isSent = true) {
         const now = new Date();
         const timeString = now.toLocaleString('en-US', { 
@@ -67,7 +63,6 @@ export class ChatManager {
         return newMessage;
     }
 
-    // Mark messages read
     markAsRead(messageIds) {
         this.messages = this.messages.map(msg => 
             messageIds.includes(msg.id) ? { ...msg, read: true } : msg
@@ -75,30 +70,25 @@ export class ChatManager {
         this.notify();
     }
 
-    // Remove single message
     deleteMessage(messageId) {
         this.messages = this.messages.filter(msg => msg.id !== messageId);
         this.notify();
     }
 
-    // Remove all messages
     clearMessages() {
         this.messages = [];
         this.notify();
     }
 
-    // Count all messages
     getMessageCount() {
         return this.messages.length;
     }
 
-    // Count unread messages
     getUnreadCount() {
         return this.messages.filter(msg => !msg.read && !msg.sent).length;
     }
 }
 
-// Format date string
 export const formatTime = (date = new Date()) => {
     return date.toLocaleString('en-US', { 
         weekday: 'long',
@@ -108,19 +98,17 @@ export const formatTime = (date = new Date()) => {
     });
 };
 
-// Input text sanitizer
 export const sanitizeText = (text) => {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 };
 
-// Scroll to bottom
 export const scrollToBottom = (element) => {
     if (element) {
         element.scrollTop = element.scrollHeight;
     }
 };
 
-// Create chat instance
 export const chatManager = new ChatManager();
+
