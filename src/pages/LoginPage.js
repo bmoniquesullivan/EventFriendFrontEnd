@@ -7,7 +7,7 @@ const LoginPage = () => {
     <div
       className="min-h-screen flex flex-col justify-center items-center"
       style={{
-        backgroundImage: 'url("https://images.unsplash.com/photo-1514525253161-7a46d19cd819?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")',
+        backgroundImage: 'url("https:https://images.unsplash.com/photo-1546841937-f3abbbb7193e?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
