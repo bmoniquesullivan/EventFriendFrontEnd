@@ -1,25 +1,37 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { getAuth, signOut } from 'firebase/auth';
 import { CalendarIcon, MapPinIcon, HeartIcon } from '@heroicons/react/24/solid';
-import { mockEvents, mockCurrentUser } from '../data/mockData';
 
 const EventCard = ({ event, isInterested, onInterestToggle }) => (
   <div className="bg-white rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-1 transition-transform duration-300">
     <Link to={`/events/${event.id}`}>
-      <img src={event.img} alt={event.title} className="w-full h-48 object-cover" />
+      <img
+        src={event.image || event.img}
+        alt={event.name || event.title}
+        className="w-full h-48 object-cover"
+      />
     </Link>
     <div className="p-6">
-      <h2 className="text-xl font-bold text-slate-800 mb-2 truncate">{event.title}</h2>
+      <h2 className="text-xl font-bold text-slate-800 mb-2 truncate">
+        {event.name || event.title}
+      </h2>
       <div className="text-slate-600 text-sm space-y-2 mb-4">
-        <p className="flex items-center"><CalendarIcon className="h-5 w-5 mr-2 text-slate-400"/> {event.date}</p>
-        <p className="flex items-center"><MapPinIcon className="h-5 w-5 mr-2 text-slate-400"/> {event.location}</p>
+        <p className="flex items-center">
+          <CalendarIcon className="h-5 w-5 mr-2 text-slate-400" />
+          {new Date(event.date).toLocaleDateString()}
+        </p>
+        <p className="flex items-center">
+          <MapPinIcon className="h-5 w-5 mr-2 text-slate-400" />
+          {event.venue || event.location}, {event.city}
+        </p>
       </div>
-      <button 
+      <button
         onClick={() => onInterestToggle(event.id)}
         className={`w-full font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center justify-center space-x-2 ${
-          isInterested 
-          ? 'bg-green-500 text-white hover:bg-green-600' 
-          : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+          isInterested
+            ? 'bg-green-500 text-white hover:bg-green-600'
+            : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
         }`}
       >
         <HeartIcon className="h-5 w-5" />
@@ -30,23 +42,72 @@ const EventCard = ({ event, isInterested, onInterestToggle }) => (
 );
 
 const EventFeedPage = () => {
-  const [interested, setInterested] = useState(mockCurrentUser.interestedEvents);
+  const [events, setEvents] = useState([]);
+  const [interested, setInterested] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const auth = getAuth();
+  const user = auth.currentUser;
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        const eventsRes = await fetch('http://127.0.0.1:5001/eventfriendfirebase/us-central1/api/events');
+        if (!eventsRes.ok) throw new Error('Failed to load events');
+        const eventsData = await eventsRes.json();
+        setEvents(eventsData.events);
+        // Dummy interested list just for toggling visuals
+        setInterested([]);
+      } catch (e) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user, navigate]);
 
   const toggleInterest = (eventId) => {
-    setInterested(prev => 
-      prev.includes(eventId) ? prev.filter(id => id !== eventId) : [...prev, eventId]
+    // Just toggle visually – no backend involved
+    setInterested((prev) =>
+      prev.includes(eventId) ? prev.filter((id) => id !== eventId) : [...prev, eventId]
     );
   };
-  
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/login');
+    } catch (err) {
+      setError('Logout failed');
+    }
+  };
+
+  if (loading) return <p className="p-4 text-slate-700">Loading events...</p>;
+  if (error) return <p className="p-4 text-red-600">{error}</p>;
+
   return (
-    <div>
+    <main className="p-6 max-w-7xl mx-auto">
       <h1 className="text-3xl font-bold text-slate-800 mb-6">Upcoming Events</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {mockEvents.map(event => (
-          <EventCard key={event.id} event={event} isInterested={interested.includes(event.id)} onInterestToggle={toggleInterest} />
+        {events.map((event) => (
+          <EventCard
+            key={event.id}
+            event={event}
+            isInterested={interested.includes(event.id)}
+            onInterestToggle={toggleInterest}
+          />
         ))}
       </div>
-    </div>
+    </main>
   );
 };
 

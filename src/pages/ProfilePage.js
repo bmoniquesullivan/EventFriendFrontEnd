@@ -1,127 +1,154 @@
-import React, { useState } from 'react';
-import { UserCircleIcon } from '@heroicons/react/24/solid';
-import { mockCurrentUser } from '../data/mockData';
-
-// Star in event pg
-const Star = ({ size }) => (
-    <svg
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        aria-hidden="true"
-        className="text-gray-400"
-    >
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-    </svg>
-);
+import React, { useState, useEffect } from "react";
+import { UserCircleIcon } from "@heroicons/react/24/solid";
+import { auth } from "../firebase"; // your firebase auth instance
+// optionally import API methods or use fetch directly
 
 const ProfilePage = () => {
-    const [buttonState, setButtonState] = useState('default'); // Tracks button status
+  const [profile, setProfile] = useState({
+    name: "",
+    email: "",
+    city: "",
+    bio: "",
+    interests: [],
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const user = auth.currentUser;
 
-    const handleSave = (e) => {
-        e.preventDefault();
-        setButtonState('loading');
+  // Fetch profile from backend or Firestore using user.uid
+  useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
-        // Simulate saving process
-        setTimeout(() => {
-            setButtonState('success');
+    fetch(`http://127.0.0.1:5001/eventfriendfirebase/us-central1/api/users/${user.uid}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load profile");
+        return res.json();
+      })
+      .then((data) => {
+        setProfile({
+          name: data.username || "",
+          email: data.email || user.email || "",
+          city: data.city || "",
+          bio: data.bio || "",
+          interests: data.interests || [],
+        });
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError("Could not load profile");
+        setLoading(false);
+      });
+  }, [user]);
 
-            // Revert to default after 2 seconds
-            setTimeout(() => setButtonState('default'), 2000);
-        }, 1500);
-    };
+  // Controlled inputs for the form
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setProfile((prev) => ({ ...prev, [name]: value }));
+  };
 
-    return (
-        <div className="relative min-h-screen overflow-hidden bg-transparent">
-            {/* =========================
-                STARS BACKGROUND
-            ========================== */}
-            <div className="absolute inset-0 pointer-events-none z-0">
-                {/* Top Stars */}
-                <div className="absolute top-6 left-6 opacity-30"><Star size={40} /></div>
-                <div className="absolute top-10 right-8 opacity-25"><Star size={35} /></div>
-                <div className="absolute top-20 left-1/3 opacity-20"><Star size={20} /></div>
-                <div className="absolute top-5 right-1/4 opacity-35"><Star size={28} /></div>
+  // For interests (string separated by commas)
+  const handleInterestsChange = (e) => {
+    const interestsArray = e.target.value.split(",").map((i) => i.trim()).filter(Boolean);
+    setProfile((prev) => ({ ...prev, interests: interestsArray }));
+  };
 
-                {/* Middle Stars */}
-                <div className="absolute top-1/2 left-10 opacity-25"><Star size={18} /></div>
-                <div className="absolute top-1/3 right-1/3 opacity-30"><Star size={25} /></div>
-                <div className="absolute top-2/3 left-1/2 opacity-20"><Star size={22} /></div>
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
 
-                {/* Bottom Stars */}
-                <div className="absolute bottom-10 left-8 opacity-20"><Star size={32} /></div>
-                <div className="absolute bottom-12 right-10 opacity-30"><Star size={28} /></div>
-                <div className="absolute bottom-20 left-1/4 opacity-15"><Star size={24} /></div>
-                <div className="absolute bottom-1/4 right-1/4 opacity-25"><Star size={30} /></div>
-            </div>
+    fetch(`http://127.0.0.1:5001/eventfriendfirebase/us-central1/api/users/${user.uid}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: profile.name,
+        city: profile.city,
+        bio: profile.bio,
+        interests: profile.interests,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to save profile");
+        setSaving(false);
+      })
+      .catch(() => {
+        setError("Failed to save profile");
+        setSaving(false);
+      });
+  };
 
-            {/* Profile Card */}
-            <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg relative z-10 mt-10 overflow-hidden">
-                {/* Gradient Bar */}
-                <div className="h-2 w-full bg-gradient-to-r from-pink-500 via-pink-400 to-orange-400"></div>
+  if (loading) return <p>Loading profile...</p>;
+  if (!user) return <p>Please login to view your profile.</p>;
 
-                {/* Profile Content */}
-                <div className="p-8">
-                    {/* Header */}
-                    <div className="flex items-center space-x-6 mb-8">
-                        <UserCircleIcon className="h-24 w-24 text-slate-300" />
-                        <div>
-                            <h1 className="text-3xl font-bold text-slate-800">{mockCurrentUser.name}</h1>
-                            <p className="text-slate-500">{mockCurrentUser.email}</p>
-                        </div>
-                    </div>
-
-                    {/* Form */}
-                    <form className="space-y-6" onSubmit={handleSave}>
-                        {/* Name */}
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
-                            <input
-                                type="text"
-                                defaultValue={mockCurrentUser.name}
-                                className="w-full px-4 py-2 border border-slate-300 rounded-md"
-                            />
-                        </div>
-
-                        {/* Home City */}
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Home City</label>
-                            <input
-                                type="text"
-                                defaultValue={mockCurrentUser.city}
-                                className="w-full px-4 py-2 border border-slate-300 rounded-md"
-                            />
-                        </div>
-
-                        {/* Bio */}
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Short Bio</label>
-                            <textarea
-                                defaultValue={mockCurrentUser.bio}
-                                rows="4"
-                                className="w-full px-4 py-2 border border-slate-300 rounded-md"
-                            ></textarea>
-                        </div>
-
-                        {/* Save Button */}
-                        <div className="pt-4">
-                            <button
-                                type="submit"
-                                className={`save-button-pfp ${buttonState}`}
-                            >
-                                {buttonState === 'loading'
-                                    ? 'Saving...'
-                                    : buttonState === 'success'
-                                    ? 'Updates saved successfully'
-                                    : 'Save Changes'}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+  return (
+    <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+      <div className="flex items-center space-x-6 mb-8">
+        <UserCircleIcon className="h-24 w-24 text-slate-300" />
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800">{profile.name || "Your Name"}</h1>
+          <p className="text-slate-500">{profile.email}</p>
         </div>
-    );
+      </div>
+
+      {error && <p className="text-red-600 mb-4">{error}</p>}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+          <input
+            name="name"
+            type="text"
+            value={profile.name}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-slate-300 rounded-md"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Home City</label>
+          <input
+            name="city"
+            type="text"
+            value={profile.city}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-slate-300 rounded-md"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Short Bio</label>
+          <textarea
+            name="bio"
+            rows="4"
+            value={profile.bio}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-slate-300 rounded-md"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">My Interests (comma separated)</label>
+          <input
+            name="interests"
+            type="text"
+            value={profile.interests.join(", ")}
+            onChange={handleInterestsChange}
+            className="w-full px-4 py-2 border border-slate-300 rounded-md"
+          />
+        </div>
+        <div className="pt-4">
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition duration-300 disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 };
 
 export default ProfilePage;
