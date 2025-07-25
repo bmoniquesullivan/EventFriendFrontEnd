@@ -10,6 +10,7 @@ import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import EventDetailPage from './pages/EventDetailPage';
+import ChatPg from './pages/ChatPage';
 
 function Layout() {
   const location = useLocation();
@@ -55,6 +56,7 @@ function LayoutWithAuth({ isLoggedIn }) {
         <Route path="/events" element={isLoggedIn ? <EventFeedPage /> : <Navigate to="/login" />} />
         <Route path="/profile" element={isLoggedIn ? <ProfilePage /> : <Navigate to="/login" />} />
         <Route path="/dashboard" element={isLoggedIn ? <DashboardPage /> : <Navigate to="/login" />} />
+        <Route path="/chat/:connectionId" element={isLoggedIn ? <ChatPg /> : <Navigate to="/login" />} />
         <Route path="/events/:id" element={isLoggedIn ? <EventDetailPage /> : <Navigate to="/login" />} />
       </Routes>
     </>

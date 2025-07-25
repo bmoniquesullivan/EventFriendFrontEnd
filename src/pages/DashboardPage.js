@@ -53,7 +53,7 @@ const DashboardPage = () => {
                   </p>
                 </div>
                 <Link
-                  to="/chat"
+                  to={`/chat/${match.connectionId}`}
                   className="ml-4 bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 inline-flex items-center justify-center"
                   aria-label={`Chat with ${match.user.name}`}
                 >

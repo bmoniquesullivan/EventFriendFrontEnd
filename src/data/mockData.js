@@ -22,7 +22,15 @@ export const mockCurrentUser = {
   city: 'Atlanta',
   interestedEvents: [1, 4],
   matches: [
-      { user: mockUsers[0], event: mockEvents[0] },
-      { user: mockUsers[3], event: mockEvents[3] },
+      { 
+        connectionId: 'Alex',
+        user: mockUsers[0], 
+        event: mockEvents[0] 
+      },
+      { 
+        connectionId: 'Diana',
+        user: mockUsers[3], 
+        event: mockEvents[3] 
+      },
   ]
 };
