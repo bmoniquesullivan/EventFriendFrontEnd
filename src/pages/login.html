@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login - Lost and Found</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css"
+    />
+    <script
+      src="https://kit.fontawesome.com/a2e0e9e9c4.js"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar is-transparent">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="index.html">
+          <img
+            src="https://www.247software.com/hubfs/lost-and-found-software.png"
+            alt="Lost and Found Logo"
+            style="height: 90px; width: auto;"
+          />
+        </a>
+
+        <div class="navbar-burger" data-target="navMenu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+
+      <div id="navMenu" class="navbar-menu">
+        <div class="navbar-start">
+          <a class="navbar-item" href="index.html">Home</a>
+          <a class="navbar-item is-active" href="login.html">Login</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Login Section -->
+    <section class="section">
+      <div class="container" style="max-width: 500px;">
+        <div class="box">
+          <h1 class="title is-4 has-text-centered">Login</h1>
+          <p
+            id="errorMsg"
+            class="has-text-danger has-text-centered is-hidden"
+          ></p>
+
+          <form id="loginForm">
+            <div class="field">
+              <label class="label">Email</label>
+              <div class="control has-icons-left">
+                <input
+                  class="input"
+                  type="email"
+                  id="email"
+                  placeholder="e.g. student@kennesaw.edu"
+                  required
+                />
+                <span class="icon is-small is-left">
+                  <i class="fas fa-envelope"></i>
+                </span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label">Password</label>
+              <div class="control has-icons-left">
+                <input
+                  class="input"
+                  type="password"
+                  id="password"
+                  placeholder="Enter your password"
+                  required
+                />
+                <span class="icon is-small is-left">
+                  <i class="fas fa-lock"></i>
+                </span>
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="control">
+                <button type="submit" class="button is-link is-fullwidth">
+                  Login
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <p class="has-text-centered mt-4">
+            Don’t have an account?
+            <a href="#">Sign up</a>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      // Burger menu toggle
+      document.querySelector('.navbar-burger').addEventListener('click', () => {
+        document.querySelector('.navbar-burger').classList.toggle('is-active');
+        document.querySelector('#navMenu').classList.toggle('is-active');
+      });
+
+      // Login handler (placeholder)
+      document.getElementById("loginForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+        const errorMsg = document.getElementById("errorMsg");
+
+        if (email === "student@kennesaw.edu" && password === "test123") {
+          errorMsg.classList.add("is-hidden");
+          alert("Login successful! Redirecting...");
+          window.location.href = "index.html";
+        } else {
+          errorMsg.textContent = "Invalid email or password.";
+          errorMsg.classList.remove("is-hidden");
+        }
+      });
+    </script>
+  </body>
+</html>
